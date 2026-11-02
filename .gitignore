@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Data
+# the raw data is in the repo, except the unzipped UCI file (127 MB, too big for GitHub)
+# notebook 01 unzips it from household_power.zip
+data/raw/uci_household/household_power_consumption.txt
+data/processed/*
+!data/processed/.gitkeep
+
+# Documents
+*.pdf
+*.tex
+*.docx
+*.pptx
+
+# Secrets
+.env
+kaggle.json
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,14 @@
+numpy==1.26.4
+pandas==2.2.2
+pyarrow==17.0.0
+scipy==1.13.1
+requests==2.32.3
+kagglehub==0.3.4
+tqdm==4.66.5
+statsmodels==0.14.2
+holidays==0.58
+scikit-learn==1.5.2
+matplotlib==3.9.2
+seaborn==0.13.2
+jupyterlab==4.2.5
+ipykernel==6.29.5
