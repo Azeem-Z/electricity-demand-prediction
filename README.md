@@ -6,11 +6,13 @@ Two datasets are used:
 - PJM Hourly Energy Consumption (regional, hourly, MW) - https://www.kaggle.com/datasets/robikscube/hourly-energy-consumption
 - UCI Individual Household Electric Power Consumption (one house, every minute, kW) - https://doi.org/10.24432/C58K54
 
-This repository contains the first part of the project:
+Notebooks in this repository:
 
 1. `notebooks/01_download_data.ipynb` - gets the data and checks it (start, end, missing hours, duplicates)
 2. `notebooks/02_preprocessing.ipynb` - cleaning, hourly resampling, calendar features, train / validation / test split, scaling
 3. `notebooks/03_temporal_pattern_analysis.ipynb` - daily, weekly and yearly patterns, STL decomposition, autocorrelation, periodogram, stationarity tests, peak hours
+4. `notebooks/04_baselines.ipynb` - seasonal naive, Random Forest and XGBoost, tuned with Optuna, 1h / 24h / 168h ahead
+5. `notebooks/05_deep_models.ipynb` - LSTM, GRU, CNN-LSTM and an attention model (simplified Temporal Fusion Transformer)
 
 
 ## Folders
@@ -21,6 +23,8 @@ data/raw/uci_household/    UCI data (zip file, unzipped by notebook 01)
 data/processed/            cleaned data, made by notebook 02 (not in the repo)
 figures/                   all charts from the notebooks as png files
 notebooks/                 the notebooks
+results/                   scores, tuned settings, attention weights (notebooks 04 and 05)
+results/predictions/       test predictions of every model, dataset and horizon
 requirements.txt           python packages
 ```
 
@@ -86,7 +90,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-This takes a few minutes.
+This takes a few minutes (TensorFlow is a big download, about 500 MB).
 
 ### Step 7 - Start Jupyter
 
@@ -103,8 +107,15 @@ Open each notebook and click **Run > Run All Cells**:
 1. `01_download_data.ipynb` (about 1 min) - unzips the UCI data, checks both datasets
 2. `02_preprocessing.ipynb` (about 1 min) - writes the cleaned data to `data/processed/`
 3. `03_temporal_pattern_analysis.ipynb` (about 1 min) - pattern analysis
+4. `04_baselines.ipynb` (about 30 min) - naive, Random Forest and XGBoost
+5. `05_deep_models.ipynb` (about 3 hours on a normal laptop CPU) - LSTM, GRU, CNN-LSTM and attention model
 
-The charts are shown in the notebooks and also saved in `figures/`.
+The charts are shown in the notebooks and also saved in `figures/`. Notebooks 04 and 05 save their scores and
+test predictions in `results/`.
+
+You don't have to run 04 and 05 to see the results: their outputs are already saved in the notebooks and in
+`results/`. If you run them again, the tree models give the same numbers; the neural networks can differ
+very slightly because TensorFlow training is not fully repeatable on every computer.
 
 Next time you only need Step 3, Step 5 and Step 7.
 
