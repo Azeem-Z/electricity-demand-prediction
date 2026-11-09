@@ -13,6 +13,13 @@ Notebooks in this repository:
 3. `notebooks/03_temporal_pattern_analysis.ipynb` - daily, weekly and yearly patterns, STL decomposition, autocorrelation, periodogram, stationarity tests, peak hours
 4. `notebooks/04_baselines.ipynb` - seasonal naive, Random Forest and XGBoost, tuned with Optuna, 1h / 24h / 168h ahead
 5. `notebooks/05_deep_models.ipynb` - LSTM, GRU, CNN-LSTM and an attention model (simplified Temporal Fusion Transformer)
+6. `notebooks/06_evaluation.ipynb` - errors by hour, day type, demand level and season, Diebold-Mariano tests, regional vs household
+7. `notebooks/07_save_best_model.ipynb` - trains and saves the XGBoost models used by the web app
+
+All models get the same tuning budget (8 Optuna trials at the 24h horizon) and the same training data
+(PJM: last 4 years of the training period), so the comparison is fair.
+
+There is also a small web app (`dashboard/`) to make predictions and look at the results.
 
 
 ## Folders
@@ -22,9 +29,12 @@ data/raw/pjm/              PJM csv files
 data/raw/uci_household/    UCI data (zip file, unzipped by notebook 01)
 data/processed/            cleaned data, made by notebook 02 (not in the repo)
 figures/                   all charts from the notebooks as png files
+figures/figure_descriptions.csv   what each chart shows, in simple words
 notebooks/                 the notebooks
-results/                   scores, tuned settings, attention weights (notebooks 04 and 05)
+results/                   scores, tuned settings, attention weights, significance tests, errors by period
 results/predictions/       test predictions of every model, dataset and horizon
+models/                    saved XGBoost models (notebook 07), used by the web app
+dashboard/                 the web app (Streamlit)
 requirements.txt           python packages
 ```
 
@@ -107,17 +117,39 @@ Open each notebook and click **Run > Run All Cells**:
 1. `01_download_data.ipynb` (about 1 min) - unzips the UCI data, checks both datasets
 2. `02_preprocessing.ipynb` (about 1 min) - writes the cleaned data to `data/processed/`
 3. `03_temporal_pattern_analysis.ipynb` (about 1 min) - pattern analysis
-4. `04_baselines.ipynb` (about 30 min) - naive, Random Forest and XGBoost
-5. `05_deep_models.ipynb` (about 3 hours on a normal laptop CPU) - LSTM, GRU, CNN-LSTM and attention model
+4. `04_baselines.ipynb` (about 5 min) - naive, Random Forest and XGBoost
+5. `05_deep_models.ipynb` (about 2-3 hours on a normal laptop CPU) - LSTM, GRU, CNN-LSTM and attention model
+6. `06_evaluation.ipynb` (about 1 min) - errors by period and significance tests
+7. `07_save_best_model.ipynb` (about 1 min) - saves the XGBoost models to `models/`
 
-The charts are shown in the notebooks and also saved in `figures/`. Notebooks 04 and 05 save their scores and
-test predictions in `results/`.
+The charts are shown in the notebooks and also saved in `figures/`. Notebooks 04 to 06 save their scores,
+test predictions and tests in `results/`.
 
-You don't have to run 04 and 05 to see the results: their outputs are already saved in the notebooks and in
-`results/`. If you run them again, the tree models give the same numbers; the neural networks can differ
-very slightly because TensorFlow training is not fully repeatable on every computer.
+You don't have to run 04 to 07 to see the results: their outputs are already saved in the notebooks, in
+`results/` and in `models/`. If you run them again, the tree models give the same numbers; the neural networks
+can differ very slightly because TensorFlow training is not fully repeatable on every computer.
 
-Next time you only need Step 3, Step 5 and Step 7.
+### Step 9 - Start the web app
+
+Notebook 02 must have been run once (the app reads `data/processed/`). Close Jupyter or open a second
+Command Prompt, go to the project folder (Step 3), activate the environment (Step 5) and type:
+
+```
+streamlit run dashboard/app.py
+```
+
+The app opens in the browser (http://localhost:8501). Stop it with Ctrl + C in the Command Prompt.
+
+Pages:
+- **Predict demand** - pick a dataset, how far ahead and some days of the test period; the XGBoost model predicts the
+  demand and shows it next to the actual demand, with the error in MW / kW and in %
+- **Results** - accuracy of all seven models, errors by period, significance tests, attention weights
+- **Temporal patterns** - daily, weekly and yearly patterns of the demand
+- **About the project** - aim, research questions, problem statement and datasets
+
+An explanation of all terms (MAE, RMSE, R2, MAPE, WAPE, ...) is at http://localhost:8501/terms.
+
+Next time you only need Step 3, Step 5 and Step 7 (notebooks) or Step 9 (web app).
 
 
 ## Using VS Code instead of Jupyter Lab
@@ -142,5 +174,6 @@ downloaded `kaggle.json` in `C:\Users\<your user name>\.kaggle\`.
 ## Problems
 
 - `py is not recognized` - Python is not installed or "Add python.exe to PATH" was not ticked. Run the installer again and choose "Modify".
-- `jupyter is not recognized` - the virtual environment is not active. Do Step 5 again.
+- `jupyter is not recognized` or `streamlit is not recognized` - the virtual environment is not active. Do Step 5 again.
+- Web app says a file in `data/processed/` is missing - run notebook 02 first.
 - Wrong kernel in Jupyter / VS Code - run `python -m ipykernel install --user --name electricity-demand` with the environment active, then pick "electricity-demand" as kernel.
