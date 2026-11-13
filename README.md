@@ -15,6 +15,7 @@ Notebooks in this repository:
 5. `notebooks/05_deep_models.ipynb` - LSTM, GRU, CNN-LSTM and an attention model (simplified Temporal Fusion Transformer)
 6. `notebooks/06_evaluation.ipynb` - errors by hour, day type, demand level and season, Diebold-Mariano tests, regional vs household
 7. `notebooks/07_save_best_model.ipynb` - trains and saves the XGBoost models used by the web app
+8. `notebooks/08_paper_figures.ipynb` - makes the small figures used in the paper (from the saved results)
 
 All models get the same tuning budget (8 Optuna trials at the 24h horizon) and the same training data
 (PJM: last 4 years of the training period), so the comparison is fair.
@@ -121,6 +122,7 @@ Open each notebook and click **Run > Run All Cells**:
 5. `05_deep_models.ipynb` (about 2-3 hours on a normal laptop CPU) - LSTM, GRU, CNN-LSTM and attention model
 6. `06_evaluation.ipynb` (about 1 min) - errors by period and significance tests
 7. `07_save_best_model.ipynb` (about 1 min) - saves the XGBoost models to `models/`
+8. `08_paper_figures.ipynb` (under 1 min) - makes the paper figures in `figures/`
 
 The charts are shown in the notebooks and also saved in `figures/`. Notebooks 04 to 06 save their scores,
 test predictions and tests in `results/`.
