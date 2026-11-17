@@ -119,7 +119,7 @@ Open each notebook and click **Run > Run All Cells**:
 2. `02_preprocessing.ipynb` (about 1 min) - writes the cleaned data to `data/processed/`
 3. `03_temporal_pattern_analysis.ipynb` (about 1 min) - pattern analysis
 4. `04_baselines.ipynb` (about 5 min) - naive, Random Forest and XGBoost
-5. `05_deep_models.ipynb` (about 2-3 hours on a normal laptop CPU) - LSTM, GRU, CNN-LSTM and attention model
+5. `05_deep_models.ipynb` (about 2-3 hours) - LSTM, GRU, CNN-LSTM and attention model
 6. `06_evaluation.ipynb` (about 1 min) - errors by period and significance tests
 7. `07_save_best_model.ipynb` (about 1 min) - saves the XGBoost models to `models/`
 8. `08_paper_figures.ipynb` (under 1 min) - makes the paper figures in `figures/`
