@@ -1,3 +1,6 @@
+# Results page: test results of all seven models in four tabs (accuracy, errors by period,
+# significance tests, attention weights).
+# why: these are the main results of the project. everything is read from the files saved by notebooks 04, 05 and 06
 import json
 
 import pandas as pd
@@ -12,6 +15,7 @@ st.title(f"Results – {LABEL[name]}")
 st.markdown("All seven models were tested on the **test period** (data they never saw in training). "
             "Each model predicted the demand **1 hour**, **1 day (24h)** and **1 week (168h)** ahead.")
 
+# a box with a short description of every model, closed at the start
 with st.expander("ℹ️ The models compared"):
     st.markdown("""
 | Model | In simple words |
@@ -25,9 +29,11 @@ with st.expander("ℹ️ The models compared"):
 | Attention (TFT) | neural network that learns which past hours to pay most attention to |
 """)
 
+# four tabs. the code inside each "with" block is shown in that tab
 t1, t2, t3, t4 = st.tabs(["Model accuracy", "Errors by period", "Significance tests", "Attention weights"])
 
 # ---------------- accuracy ----------------
+# help text for each error measure
 METRIC_HELP = {
     "rmse": f"Root Mean Squared Error, in {unit}. Typical size of the prediction error, where big mistakes count more. Lower is better.",
     "mae": f"Mean Absolute Error, in {unit}. On average, how far the prediction is from the actual demand. Lower is better.",
@@ -36,17 +42,22 @@ METRIC_HELP = {
 }
 with t1:
     st.markdown("How close were the predictions to the real demand?")
+    # dropdown to pick the measure. format_func shows a longer name on the screen
     metric = st.selectbox("Measure", ["rmse", "mae", "r2", "mape"],
                           format_func={"rmse": "RMSE – typical error", "mae": "MAE – average error",
                                        "r2": "R² – how much is explained", "mape": "MAPE – average error in %"}.get,
                           help="Pick how to measure accuracy. Hover over the ? icons for an explanation.")
     st.info(METRIC_HELP[metric])
 
+    # scores of the chosen dataset only
     s = load_scores()
     s = s[s["dataset"] == name]
+    # mean over the 3 seeds. unstack() makes one column per horizon, .loc[MODELS] keeps the models in a fixed order
     t = s.groupby(["model", "horizon"])[metric].mean().unstack().loc[MODELS].rename(index=NAMES)
     t.columns = ["1 hour ahead", "1 day ahead", "1 week ahead"]
+    # best model per horizon: highest for R2, lowest for the error measures
     best = t.idxmax() if metric == "r2" else t.idxmin()
+    # show the table with the best value of each column in green
     st.dataframe(
         t.style.format("{:.3f}").highlight_max(axis=0, color="#bbf7d0") if metric == "r2"
         else t.style.format("{:.3f}").highlight_min(axis=0, color="#bbf7d0"),
@@ -62,12 +73,14 @@ with t1:
         st.warning("For the household, MAPE looks very large because night demand is close to zero, "
                    "so a small error becomes a big percentage. RMSE and MAE are more useful here.")
 
+    # the same numbers as a bar chart, one group of bars per horizon
     plot_df = s.groupby(["model", "horizon"])[metric].mean().reset_index()
     plot_df["model"] = plot_df["model"].map(NAMES)
     plot_df["horizon"] = plot_df["horizon"].map({1: "1 hour ahead", 24: "1 day ahead", 168: "1 week ahead"})
     fig = px.bar(plot_df, x="horizon", y=metric, color="model", barmode="group",
                  labels={metric: metric.upper().replace("R2", "R²"), "horizon": ""})
     st.plotly_chart(fig, use_container_width=True)
+    # short summary in words, different for the region and the household
     if name == "pjme":
         st.markdown("**In short:** for the region, the tree models (Random Forest, XGBoost) are clearly best **1 hour ahead**. "
                     "**1 day ahead** GRU, Random Forest and XGBoost are equally good, and **1 week ahead** the neural networks "
@@ -79,20 +92,26 @@ with t1:
                     "All models get worse the further ahead they predict.")
 
 # ---------------- errors by period ----------------
+# the four ways the error can be split
 GROUPS = {"hour": "Hour of the day", "day_type": "Type of day (weekday / weekend / holiday)",
           "level": "Demand level (low / normal / peak)", "season": "Season"}
+# why: one average error hides when a model fails, so the error is also shown by hour, day type, level and season
 with t2:
     st.markdown("One average error can hide when a model struggles. Here the error (RMSE) is split by **when** the demand happened.")
     c1, c2 = st.columns(2)
+    # key= gives each dropdown its own name, needed because there are several with the same label
     h = c1.selectbox("How far ahead", [1, 24, 168], index=1, key="h_period",
                      format_func={1: "1 hour ahead", 24: "1 day ahead", 168: "1 week ahead"}.get)
     by = c2.selectbox("Split the error by", list(GROUPS), format_func=GROUPS.get,
                       help="Peak = the 10% of hours with the highest demand, low = the 10% with the lowest demand.")
+    # the user can pick several models. MODELS[1:] leaves out the seasonal naive
     chosen = st.multiselect("Models", MODELS[1:], default=["xgb", "gru"], format_func=lambda m: NAMES[m])
 
+    # error table saved by notebook 06, filtered to the chosen dataset, horizon, split and models
     b = load_csv("results/error_by_period.csv")
     t = b[(b["dataset"] == name) & (b["horizon"] == h) & (b["by"] == by) & (b["model"].isin(chosen))].copy()
     t["model"] = t["model"].map(NAMES)
+    # hours are shown as a line (0 to 23), the other groups as bars
     if by == "hour":
         t["group"] = t["group"].astype(int)
         fig = px.line(t.sort_values("group"), x="group", y="rmse", color="model", markers=True)
@@ -109,6 +128,7 @@ with t2:
                     "1 day and 1 week ahead, while XGBoost is better on **holidays** and in normal hours.")
 
 # ---------------- significance ----------------
+# why: a small difference in RMSE can be luck. this tab shows which differences are real
 with t3:
     st.markdown("""
 Two models can have slightly different errors just by chance. The **Diebold–Mariano test** checks whether the
@@ -118,8 +138,10 @@ difference between two models is **real**.
 """)
     h = st.selectbox("How far ahead", [1, 24, 168], key="h_dm",
                      format_func={1: "1 hour ahead", 24: "1 day ahead", 168: "1 week ahead"}.get)
+    # test results saved by notebook 06
     dm = load_csv("results/dm_tests.csv")
     t = dm[(dm["dataset"] == name) & (dm["horizon"] == h)].copy()
+    # new table with clear column names for the screen
     t = pd.DataFrame({
         "Model A": t["model_a"].map(NAMES),
         "Model B": t["model_b"].map(NAMES),
@@ -135,6 +157,7 @@ difference between two models is **real**.
                  })
 
 # ---------------- attention ----------------
+# why: shows which past hours the attention model looks at most
 with t4:
     st.markdown("""
 The **attention model** looks at the last hours before it makes a prediction and gives each hour a **weight**
@@ -142,11 +165,15 @@ The **attention model** looks at the last hours before it makes a prediction and
 """)
     h = st.selectbox("How far ahead", [1, 24, 168], key="h_att",
                      format_func={1: "1 hour ahead", 24: "1 day ahead", 168: "1 week ahead"}.get)
+    # attention weights saved by notebook 05
     a = load_csv(f"results/attention_{name}_h{h}.csv")
     fig = px.bar(a, x="hours_before_origin", y="weight", labels={"weight": "attention weight"})
+    # dashed line = the weight every hour would get if all hours were treated the same (1 / number of hours)
     fig.add_hline(y=1 / len(a), line_dash="dash", annotation_text="equal attention to every hour")
+    # reversed x axis, so the oldest hour is on the left
     fig.update_xaxes(autorange="reversed", title="hours before the prediction was made")
     st.plotly_chart(fig, use_container_width=True)
+    # L = window length of the attention model, read from the saved settings
     with open(BASE / "results/deep_params.json") as f:
         L = json.load(f)[name]["attention"]["L"]
     st.markdown(f"**In short:** the model looks at the last {L} hours. All bars are close to the dashed line, "

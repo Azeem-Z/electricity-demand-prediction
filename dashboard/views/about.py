@@ -1,3 +1,5 @@
+# About page: explains the project (overview, problem statement, datasets).
+# it is mostly text. only the table of the train / val / test periods at the end is made from the data
 import pandas as pd
 import streamlit as st
 
@@ -6,6 +8,7 @@ from common import load_split, LABEL
 st.title("About the project")
 st.markdown("**Deep Learning Based Electricity Demand Prediction with Temporal Pattern Analysis** – COM748 Masters Research Project")
 
+# three tabs
 tab1, tab2, tab3 = st.tabs(["🏠 Overview", "❓ Problem statement", "🗂️ Datasets"])
 
 # ---------------- overview ----------------
@@ -16,6 +19,7 @@ This project compares tree-based and deep learning models for predicting electri
 a regional grid and a single household, and uses **temporal pattern analysis** to explain where and why the models make errors.
 """)
 
+    # four small boxes with the key facts. delta_color="off" keeps the small text grey
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Datasets", "2", "PJM East + UCI household", delta_color="off")
     c2.metric("Models compared", "7", "incl. seasonal naive", delta_color="off")
@@ -66,6 +70,7 @@ best at different scales and horizons, and when and why they fail.
 """)
 
     st.subheader("Research gaps")
+    # two columns with two boxes each for the four research gaps
     c1, c2 = st.columns(2)
     with c1:
         st.info("**1. Single-scale evaluation**\n\nMost studies use one dataset at one network level, so it is unknown "
@@ -126,10 +131,12 @@ Each dataset is split **in time order** – the model learns from the past and i
 - **Validation (15%)** – used to choose the model settings
 - **Test (15%)** – used only at the end to measure accuracy; the model never sees it during training
 """)
+    # one row for each dataset and part, with the first date, the last date and the number of hours
     rows = []
     for name in ["pjme", "uci"]:
         for part, label in [("train", "Training"), ("val", "Validation"), ("test", "Test")]:
             d = load_split(name, part)
+            # strftime("%d %b %Y") writes the date as text, e.g. 01 Jan 2015
             rows.append({"Dataset": LABEL[name], "Part": label, "From": d.index.min().strftime("%d %b %Y"),
                          "To": d.index.max().strftime("%d %b %Y"), "Hours": len(d)})
     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)

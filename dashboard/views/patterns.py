@@ -1,3 +1,5 @@
+# Temporal patterns page: charts of the daily, yearly and weekly pattern of the chosen dataset.
+# why: the pattern analysis is one main part of the project (notebook 03). it explains the errors on the Results page
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -20,17 +22,22 @@ the hours where demand changes the most (for example the evening peak) are also 
 """)
 st.caption("All charts on this page use the training data only.")
 
+# only the train part is used, same as in notebook 03
 df = load_split(name, "train")
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 # ---------------- daily pattern ----------------
 st.subheader("1. Daily pattern – demand over the day")
+# label every hour as holiday, weekend or weekday. np.where(condition, a, b) = a if true, else b
 day_type = np.where(df["holiday"] == 1, "holiday", np.where(df["weekend"] == 1, "weekend", "weekday"))
+# average demand for each hour and day type. reset_index() turns the result back into a normal table
 by_hour = df.groupby([df["hour"], day_type])["load"].mean().reset_index()
 by_hour.columns = ["hour", "day type", "load"]
+# px.line draws one line per day type
 fig = px.line(by_hour, x="hour", y="load", color="day type", markers=True,
               labels={"load": f"average demand ({unit})", "hour": "hour of the day (0 = midnight)"})
 st.plotly_chart(fig, use_container_width=True)
+# the text under the chart is different for the region and for the household
 st.markdown("**How to read it:** each line is the average demand at each hour of the day, separately for weekdays, weekends and public holidays. "
             + ("**What it shows:** demand is lowest at night (around 3–4 am) and highest in the late afternoon and evening. "
                "Weekdays are clearly higher than weekends, and holidays look like weekends."
@@ -40,6 +47,7 @@ st.markdown("**How to read it:** each line is the average demand at each hour of
 
 # ---------------- yearly pattern ----------------
 st.subheader("2. Yearly pattern – demand by month")
+# average demand for each month
 by_month = df.groupby("month")["load"].mean().reset_index()
 fig = px.bar(by_month, x="month", y="load", labels={"load": f"average demand ({unit})", "month": "month (1 = January)"})
 st.plotly_chart(fig, use_container_width=True)
@@ -52,8 +60,10 @@ st.markdown("**How to read it:** each bar is the average demand in that month. "
 
 # ---------------- weekly pattern ----------------
 st.subheader("3. Weekly pattern – weekday × hour")
+# pivot_table makes a grid: rows = weekday, columns = hour, value = average demand
 heat = df.pivot_table(index="dayofweek", columns="hour", values="load")
 heat.index = DAYS
+# px.imshow draws the grid as a heatmap (colour = demand)
 fig = px.imshow(heat, aspect="auto", color_continuous_scale="Viridis",
                 labels={"x": "hour of the day", "y": "", "color": unit})
 st.plotly_chart(fig, use_container_width=True)
@@ -65,7 +75,9 @@ st.markdown("**How to read it:** each square is the average demand on that weekd
 
 # ---------------- key facts ----------------
 st.subheader("4. The two datasets compared")
+# numbers saved by notebook 03 (strength of the patterns and variability)
 p = load_csv("data/processed/pattern_summary.csv").set_index("dataset")
+# three small boxes that compare the region and the house
 c1, c2, c3 = st.columns(3)
 c1.metric("Daily pattern strength – region / house", f"{p.loc['PJME', 'daily_strength']:.2f} / {p.loc['UCI', 'daily_strength']:.2f}",
           help="From 0 to 1: how strongly the demand repeats the same shape every day. Close to 1 = very regular.")

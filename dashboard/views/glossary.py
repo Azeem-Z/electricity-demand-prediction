@@ -1,3 +1,5 @@
+# Terms page: short explanations of the terms used in the app, each with a small example.
+# it is only text. the page is not in the menu, open it with /terms in the browser
 import streamlit as st
 
 st.title("📖 Terms explained")
@@ -18,6 +20,7 @@ A **positive** error means the prediction was **too high**, a **negative** error
 
 st.subheader("Error measures")
 
+# expander = a box that opens on click. expanded=True means it is open at the start
 with st.expander("**MAE** – Mean Absolute Error", expanded=True):
     st.markdown("""
 **What it is:** the average size of the error, ignoring if it was too high or too low. Same unit as the demand (MW or kW).
