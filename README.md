@@ -36,6 +36,7 @@ results/                   scores, tuned settings, attention weights, significan
 results/predictions/       test predictions of every model, dataset and horizon
 models/                    saved XGBoost models (notebook 07), used by the web app
 dashboard/                 the web app (Streamlit)
+questions_and_answers/     possible questions about the project with easy answers
 requirements.txt           python packages
 ```
 
