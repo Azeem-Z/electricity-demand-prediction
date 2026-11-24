@@ -3,7 +3,11 @@
 
 import streamlit as st
 
+from common import ensure_data
+
 st.set_page_config(page_title="Electricity Demand Prediction", page_icon="⚡", layout="wide")
+
+ensure_data()       # makes data/processed from the raw data if it is missing (new server)
 
 pages = {
     "Main": [

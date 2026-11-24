@@ -65,7 +65,8 @@ st.markdown("**How to read it:** each square is the average demand on that weekd
 
 # ---------------- key facts ----------------
 st.subheader("4. The two datasets compared")
-p = load_csv("data/processed/pattern_summary.csv").set_index("dataset")
+# copy of data/processed/pattern_summary.csv (notebook 03), kept in results/ so it is in git for the server
+p = load_csv("results/pattern_summary.csv").set_index("dataset")
 c1, c2, c3 = st.columns(3)
 c1.metric("Daily pattern strength – region / house", f"{p.loc['PJME', 'daily_strength']:.2f} / {p.loc['UCI', 'daily_strength']:.2f}",
           help="From 0 to 1: how strongly the demand repeats the same shape every day. Close to 1 = very regular.")
