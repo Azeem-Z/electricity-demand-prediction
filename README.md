@@ -203,7 +203,8 @@ The study itself (notebooks, paper) does not use the EIA data.
 1. Go to https://share.streamlit.io and sign in with the GitHub account that owns this repository.
 2. Click **Create app** > **Deploy a public app from GitHub**.
 3. Repository: `Azeem-Z/electricity-demand-prediction`, branch: `main`, main file path: `dashboard/app.py`.
-4. Click **Advanced settings** and choose **Python 3.11**.
+4. Python version: keep the default (3.14) or any version from 3.12 up. The web app packages
+   (`dashboard/requirements.txt`) are newer than the notebook packages and need Python 3.12 or newer.
 5. Click **Deploy**. The server installs `dashboard/requirements.txt` (no TensorFlow, a few minutes).
 
 The first start takes about 1-2 minutes, because the app makes the cleaned data from the raw data and downloads

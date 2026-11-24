@@ -1,11 +1,15 @@
-# packages for the web app only (no TensorFlow, so the server install is small and fast)
-streamlit==1.39.0
-numpy==1.26.4
-pandas==2.2.2
-pyarrow==17.0.0
-# on the linux server the cpu version is used: same xgboost, but 5 MB instead of about 350 MB (no gpu library)
-xgboost-cpu==2.1.1; sys_platform == "linux"
-xgboost==2.1.1; sys_platform != "linux"
-plotly==5.24.1
+# packages for the web app only (no TensorFlow, so the server install is small and fast).
+# newer versions than requirements.txt, because the server uses a new Python (3.14) and the old
+# versions have no ready packages for it. tested: same predictions and same data as the notebooks.
+streamlit==1.67.0
+numpy==2.5.5
+pandas==3.1.1
+pyarrow==26.0.1
+scipy==1.18.1
+scikit-learn==1.9.1
+plotly==7.1.0
 holidays==0.58
-requests==2.32.3
+requests==2.34.2
+# on the linux server the cpu version is used: same xgboost, but much smaller (no gpu library)
+xgboost-cpu==3.4.1; sys_platform == "linux"
+xgboost==3.4.1; sys_platform != "linux"
