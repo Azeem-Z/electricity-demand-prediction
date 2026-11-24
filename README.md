@@ -28,7 +28,8 @@ There is also a small web app (`dashboard/`) to make predictions and look at the
 ```
 data/raw/pjm/              PJM csv files
 data/raw/uci_household/    UCI data (zip file, unzipped by notebook 01)
-data/processed/            cleaned data, made by notebook 02 (not in the repo)
+data/raw/eia/              PJM East demand from Sep 2018 to today (EIA), used only by the web app
+data/processed/            cleaned data, made by notebook 02 or by the web app (not in the repo)
 figures/                   all charts from the notebooks as png files
 figures/figure_descriptions.csv   what each chart shows, in simple words
 notebooks/                 the notebooks
@@ -36,6 +37,7 @@ results/                   scores, tuned settings, attention weights, significan
 results/predictions/       test predictions of every model, dataset and horizon
 models/                    saved XGBoost models (notebook 07), used by the web app
 dashboard/                 the web app (Streamlit)
+dashboard/requirements.txt python packages for the web app only (for the server)
 requirements.txt           python packages
 ```
 
@@ -133,8 +135,9 @@ can differ very slightly because TensorFlow training is not fully repeatable on 
 
 ### Step 9 - Start the web app
 
-Notebook 02 must have been run once (the app reads `data/processed/`). Close Jupyter or open a second
-Command Prompt, go to the project folder (Step 3), activate the environment (Step 5) and type:
+The notebooks do not have to be run first: if `data/processed/` is empty, the app makes it from the raw data
+the first time it starts (about 1 minute). Close Jupyter or open a second Command Prompt, go to the project
+folder (Step 3), activate the environment (Step 5) and type:
 
 ```
 streamlit run dashboard/app.py
@@ -143,8 +146,9 @@ streamlit run dashboard/app.py
 The app opens in the browser (http://localhost:8501). Stop it with Ctrl + C in the Command Prompt.
 
 Pages:
-- **Predict demand** - pick a dataset, how far ahead and some days of the test period; the XGBoost model predicts the
-  demand and shows it next to the actual demand, with the error in MW / kW and in %
+- **Predict demand** - pick a dataset, how far ahead and some days; the XGBoost model predicts the
+  demand and shows it next to the actual demand, with the error in MW / kW and in %. For PJM East any day up to
+  today can be chosen, plus a forecast of the next hours / days (see "Data after 2018" below)
 - **Results** - accuracy of all seven models, errors by period, significance tests, attention weights
 - **Temporal patterns** - daily, weekly and yearly patterns of the demand
 - **About the project** - aim, research questions, problem statement and datasets
@@ -173,9 +177,43 @@ which may ask for a login: create a free Kaggle account, go to Settings > API > 
 downloaded `kaggle.json` in `C:\Users\<your user name>\.kaggle\`.
 
 
+## Data after 2018 (web app only)
+
+The study data of PJM East ends on 3 Aug 2018. For newer days the web app uses the **U.S. Energy Information
+Administration (EIA)**, the official energy statistics office of the US government. Its Hourly Electric Grid
+Monitor (form EIA-930) gives the hourly demand of every PJM zone for free, without a login:
+https://www.eia.gov/electricity/gridmonitor/
+
+- PJM East = the 11 Mid-Atlantic zones of PJM (AE, BC, DPL, JC, ME, PE, PEP, PL, PN, PS, RECO), so the app adds them up.
+- The EIA time (UTC) is changed to US Eastern time, like the study data. After that the average daily shape of both
+  matches (correlation 0.99, same peak hour).
+- The usable EIA data starts on 18 Sep 2018, so there is no data between 3 Aug and 18 Sep 2018.
+- A saved copy is in `data/raw/eia/pjm_east_eia.csv`. When the app starts it downloads only the newest days
+  (at most every 6 hours). Without internet the saved copy is used. To rebuild the saved copy:
+  `python dashboard/eia_data.py`
+- Accuracy of the saved XGBoost models on Oct 2018 - Nov 2026 (RMSE): 685 MW (1h), 2455 MW (24h), 3572 MW (168h),
+  close to the test period of the study (549 / 2512 / 3780 MW).
+
+The household data ends in Nov 2010 and there is no newer data for this house, so it keeps the test period only.
+The study itself (notebooks, paper) does not use the EIA data.
+
+
+## Deploy the web app (Streamlit Community Cloud, free)
+
+1. Go to https://share.streamlit.io and sign in with the GitHub account that owns this repository.
+2. Click **Create app** > **Deploy a public app from GitHub**.
+3. Repository: `Azeem-Z/electricity-demand-prediction`, branch: `main`, main file path: `dashboard/app.py`.
+4. Click **Advanced settings** and choose **Python 3.11**.
+5. Click **Deploy**. The server installs `dashboard/requirements.txt` (no TensorFlow, a few minutes).
+
+The first start takes about 1-2 minutes, because the app makes the cleaned data from the raw data and downloads
+the newest EIA data. After that it is fast. Every new push to `main` updates the app automatically.
+
+
 ## Problems
 
 - `py is not recognized` - Python is not installed or "Add python.exe to PATH" was not ticked. Run the installer again and choose "Modify".
 - `jupyter is not recognized` or `streamlit is not recognized` - the virtual environment is not active. Do Step 5 again.
-- Web app says a file in `data/processed/` is missing - run notebook 02 first.
+- Web app says a file in `data/processed/` is missing - run `python dashboard/prepare_data.py` (or notebook 02).
+- Predict page says the newest days could not be downloaded - no internet or the EIA site is down; the saved copy is used.
 - Wrong kernel in Jupyter / VS Code - run `python -m ipykernel install --user --name electricity-demand` with the environment active, then pick "electricity-demand" as kernel.
